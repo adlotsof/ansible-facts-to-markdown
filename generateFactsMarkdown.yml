@@ -1,0 +1,51 @@
+---
+- name: gater Facts
+  hosts: nodes
+  vars_files:
+    - ./vars/vars.yml
+  become: true
+  tasks:
+   - name: Install the docker library / will fail on python <=2.6
+     ansible.builtin.shell: 
+          cmd: pip install docker
+     ignore_errors: yes
+   - name: Gather facts on listening ports
+     community.general.listen_ports_facts:
+   - name: gather facts on docker
+     docker_host_info:
+        images: yes
+        containers: yes
+        volumes: yes
+        verbose_output: yes
+     ignore_errors: yes
+     register: dockerresults
+   - name: gather git information
+     ansible.builtin.shell:
+      cmd: "git --git-dir={{ item }}.git  --work-tree={{ item }} status -v"
+     with_items: "{{ git.paths }}"
+     register: gitOutput
+   - name: store the git info as a fact
+     ansible.builtin.set_fact:
+             git_paths: "{{ git_paths|default([]) + [{'path': item.item, 'status': item.stdout_lines } ] }}"
+             #   - path: "{{ item.item }}", 
+             # - status: "{{ item.stdout_lines }}"] 
+     with_items: "{{gitOutput.results}}"
+   - name: upgrade the apt - cache
+     ansible.builtin.apt:
+       update_cache: yes
+   - name: gather apt packages with available upgrades
+     ansible.builtin.shell:
+      cmd: apt list --upgradable
+     register: aptOutput
+   - name: store the apt upgradable output as a fact
+     set_fact:
+      upgradable: "{{ aptOutput }}"
+   - name: write the output
+     ansible.builtin.template:
+             src: ./templates/standart.md
+             dest: "{{ output.path }}{{ansible_hostname}}.md"
+     delegate_to: localhost
+ 
+
+
+   

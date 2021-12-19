@@ -1,0 +1,8 @@
+[nodes]
+localhost ansible_connection=local
+
+[output]
+localhost output.path="/home/tim/ansible/output/" ansible_connection=local
+
+
+

@@ -1,0 +1,6 @@
+---
+git:
+  paths: 
+     - /home/tim/Desktop/terrafree-base/
+output: 
+   path: /home/tim/ansible/output/
